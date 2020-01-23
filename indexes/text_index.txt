@@ -1,0 +1,39 @@
+Important for searching!
+
+Text index splits up the words and removes all the stopwords such as (the, in, of, etc) and stores every word of value as stem word in lowercase.
+
+Note:
+You can use text-index only on one field / collection.(so that field should possibly be in every document in collection).
+However, you can merge multiple fields while creating text-index
+
+createIndex({field:"text"})
+
+For e.g:
+
+createIndex({"description":"text"}) where the description is the field.
+
+Searchin using the index:
+
+find({$text:{$search:"keywords"}})
+
+note: no need to specify the field "description" as text-index is done only on one field that is self-understood my mongodb.
+
+
+find({$text:{$search:"red book"}})
+
+Here red and books are both different keywords not one means it will search all docs in index where 'red' and 'book' appears individually.
+
+If 'red' appears in doc that is of 'T-shirt', it will be returned as well. 
+
+
+To search for specific phrase: use escape sequences
+
+find({$text:{$search:"\"red book\""}})
+
+Now it will search for docs where full 'red book' appears.
+
+
+
+
+
+
