@@ -1,1 +1,1 @@
-# mongo_db_notes
+#This repo is the collection of useful resources such as guides, solution, etc
