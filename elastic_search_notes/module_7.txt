@@ -1,0 +1,255 @@
+1:Search methods
+
+Query DSL method and Request URI method.
+
+Query DSL is preferred and recommended way to query searches.
+
+Query DSL e.g:
+
+GET /my_products/_search
+{
+    "query": {
+        "match":{
+            "description":"mind"
+        }
+    }
+}
+
+Request URI method:
+
+GET /my_products/_search?q=description:"mind"
+
+--------------------------------------------------------------------------------------------
+
+2: Searching with the request URI
+
+Official documentation URL:
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/search-uri-request.html
+
+
+----------------------------------------------------------------------------------------
+CREAM
+
+3: Introducing the Query DSL
+
+Two main groups of query in Query DSL
+
+Leaf Query and Compound Query
+
+Basic idea behind both:
+
+Leaf Query queries search for values within particular fields where compound queries contain mutiple leaf queries and compound queries themselves.
+
+Leaf Query e.g.
+
+category="fruit"
+
+
+Compound Query e.g.
+
+category="fruit" OR category="vegetable"  <---Bool query
+
+--------------
+
+4: Searcing with Query DSL
+
+
+
+GET /{index_name}/_search
+{
+    "query": {
+        "{query_name}":{
+            {query_definition}
+        }
+    }
+}
+
+For e.g. To match all documents in index no matter what.--> use "match_all"
+
+GET /products/_search
+{
+    "query": {
+        "match_all":{
+
+        }
+    }
+}
+
+---------------------------------------------------------------------------------
+
+5: Understanding relevance score
+
+How elasticsearch calculates relevance score?
+
+In past, it used an algo TF/IDF. Term Frequence/Inverse Document Frequency
+
+It uses 3 factors to determine relevance of term for particular document.
+
+---
+1-Term Frequency: 
+How many times does the term appear in the field for a given document?
+
+!IMP:[So the more times a term appears within the field, HIGHER the relevance score.]
+---
+
+---
+2-Inverse Document Frequency:
+How often does the term appear for particular fields within the index (i.e. across all documents)?
+
+For e.g:
+How many times the term 'salad' appear for title fields in the index (i.e. across all documents).
+
+!IMP:[So the more times a term appears in the index LOWER the relevance score for the particular field].
+
+Hence, if a document contains the term and it's not a common term for the fields then this is a signal that document is relevance.
+---
+
+---
+3-Field length norm: How long the field?
+
+![The longer the field is, lower the relevance score]
+
+For eg. the term 'salad' in the field title of 50 character is more significant then title of 5000 characters.
+---
+ 
+Other factors may be used as well such proximity of term and fussiness for accounting typos.
+
+
+
+---
+
+Now, it currently uses okapi BM25 algo or just BM25 algo in short.
+
+It is better at handling stop words.
+
+If a term or even a stop word appears so many times in the field it will boost the relevance score more than it should. And this approach can be hacked for getting good score, illegitimately.
+
+For eg. description field can contain a term repeatedly just in order to boos the score.
+
+BM25 solves this problem by using an algo called non-linear Term frequency saturation.
+
+The idea behind is very simple unlike its complex name. HAHAHA
+
+It puts an upper limit for how much a term can boost relevance score.
+
+For.e.g let's say the upper limit is 10 for a term.
+
+And if it appears 10 times then it significantly has more relevance than it would if it appeared 2 or 3 times.
+
+But if it appears more than 10 times lets say 1000 times then it would boost only as much as it would do for 10 times.
+  
+Another factor it improves on is field length norm. For more see documentation.
+
+
+----------------
+Important:
+
+You can tweak the relevance by affecting the scoring within queries.
+
+Also, you can change how elasticsearch calculates the relevance score but this is one is discouraged. So, don't do it unless you really need to.
+------------------
+
+To know how elastic search calculated the rel. score: use ?explain param
+
+GET /products/_search?explain
+{
+	
+}
+----------------------------------------------------------------------------------
+
+VERY USEFUL
+
+Debugging unexpected search results.
+
+There is _explain API which tells why your document(s) didn't match.
+
+GET /product/1/_explain
+{
+	"query": {
+	"{query_name}":{
+		{query_definition}
+        }
+    }
+}
+
+-------------------------------------------------------------------------------
+
+7:
+
+A query clause can be executed in 2 different contexts.
+
+Query context or Filter context
+
+
+Query context --> Do documents match? + How well do they match? 
+Matching is done along with  Relevance score is also computed.
+
+Filter context --> Do documents match? 
+Only, Matching is done, that's it.
+
+Use query context when you have to search the documents based on relevance score.
+
+But use Filter context when you just have to filter/match the docs.
+
+Filter context is effecient to be used for fields such as dates, status, ranges, etc.
+
+----------------------------------------------------------------------------------
+
+VERY VERY IMPORTANT.
+
+8: Difference between Term Level queries(term) and Full-text queries(match|match_all).
+
+Term level queries are not analyzed while full-text queries do.
+
+--------------------
+For eg:
+
+User enters the input:
+
+(In term level query)
+
+"Lobster" ---> "lobster"(inverted index)
+
+Hence, it will not match.
+--
+
+(In match query)
+
+"Lobster" ---> Analyzer(same used for index)-----"lobster"-------->"lobster"(inverted index)
+
+Hence, it matches.
+
+----------------------
+
+In short, if you just to filter the document where you as developer gives input, use Term level queries for fields type of dates, status, range, etc.
+
+But, if the user is giving the input then you should use full-text (match) queries.
+
+-----------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

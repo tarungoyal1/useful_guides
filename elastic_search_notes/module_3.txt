@@ -1,0 +1,85 @@
+------------------------------------------
+
+Installing elasticsearch on linux:
+
+If you prefer downloading the .deb package then do the following
+
+1: Download the package from the official site
+2: shasum -a 512 -c elasticsearch-7.5.2-amd64.deb.sha512 
+	Do compare your SHA with published SHA on website.
+3: sudo dpkg -i elasticsearch-7.5.2-amd64.deb
+
+--------------------------------------------
+
+Elasticsearch can be started and stopped as follows:
+
+sudo systemctl start elasticsearch.service
+sudo systemctl stop elasticsearch.service
+
+--------------------------------------------
+(optional)
+To configure Elasticsearch to start automatically when the system boots up, run the following commands:
+
+sudo /bin/systemctl daemon-reload
+sudo /bin/systemctl enable elasticsearch.service
+
+----------------------------------------------
+
+You can test that your Elasticsearch node is running by sending an HTTP request to port 9200 on localhost:
+
+curl http://localhost:9200
+
+or you can do this in browser.
+
+Output should be similar to this:
+
+{
+  "name" : "creativeMachine",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "jLmjdCW-S7G1VM2gl_8K9Q",
+  "version" : {
+    "number" : "7.5.2",
+    "build_flavor" : "default",
+    "build_type" : "deb",
+    "build_hash" : "8bec50e1e0ad29dad5653712cf3bb580cd1afcdf",
+    "build_date" : "2020-01-15T12:11:52.313576Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.3.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+
+*******************************************************************************************
+
+Installing kibana on linux:
+
+1: wget https://artifacts.elastic.co/downloads/kibana/kibana-7.5.2-amd64.deb
+	Do compare your SHA with published SHA on website.
+2: shasum -a 512 kibana-7.5.2-amd64.deb 
+3: sudo dpkg -i kibana-7.5.2-amd64.deb
+
+--------------------------
+
+sudo systemctl start kibana.service
+sudo systemctl stop kibana.service
+
+
+Wait, kibana server takes to start. You may get error like [Kibana server is not ready yet] if you ping too early after starting the service.
+
+----------------------------
+
+To connect to kibana server:
+
+localhost:5601
+
+You can reach the Kibana server’s status page by navigating to the status endpoint, for example, localhost:5601/status. The status page displays information about the server’s resource usage and lists the installed plugins.
+
+For JSON-formatted server status details, use the API endpoint at localhost:5601/api/status
+
+----------------------------
+
+
+

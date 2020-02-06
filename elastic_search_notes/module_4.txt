@@ -1,0 +1,205 @@
+1:Creating a new index:
+
+By the way, indices are created implicitly when you start adding doc (step 2) very much like in mongodb. However, you can create an index explicitly if you want to tune some settings.
+
+
+PUT /{index_name}
+
+E.g: PUT /products
+
+You can append a query parameter such PUT /products?pretty
+ 
+'pretty' makes response easier to read (optinal)
+
+----------------------------------------------
+
+2:Adding a document to index:
+
+POST /{index_name}/_doc/
+
+This is will auto-assign an id to the document very much like mongodb.
+
+
+To provide your own id:
+
+POST /{index_name}/_doc/{id}
+
+---------------------------------------------
+
+3: Getting a document by id
+
+GET /{index_name}/_doc/{id}
+
+**
+
+To get all documents in the index:
+
+GET /{index_name}/_search
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+-------------------------------------------
+
+4: Replacing an entire document by id
+
+
+PUT /{index_name}/_doc/{id}
+{
+	request body with new or more appended data
+}
+
+Document will be updated and give a meta field '_version':2 or the number which indicates how many times the document is updated/replaced.
+
+----------------------------------------------
+5: Updating the document by id
+
+#Updating multiple documents is not possible but deleting multiple documents is.
+
+POST /{index_name}/_update/{id}
+{
+	"doc":{
+		old fields to update with value,
+		any new field to be inserted
+	}
+}
+
+
+Document is immutable. 
+When update occurs, Elasticsearch finds, updates, re-indexes the doc with new _version number behind the scene.
+
+----------------------------------------------
+
+6:Scripting
+
+You can do many-many dynamic things with scripts.
+Such as updating a field by 10 from its previous value, adding another entry in an array field, etc.
+
+For ex: Updating the price by 5
+
+
+POST /products/_update/1
+{
+  "script": "ctx._source.price +=5"
+}
+
+
+ctx is the context var that allows you dynamically access the fields and its sub-fields.
+
+such as _source and then price.
+
+This is just an example of update with script but you can do so many things. Read documentation.
+
+----------------------------------------------------
+
+7: Upserts
+
+Update the document if exists else insert.
+So you need to specify fields for both.
+
+E.g.
+
+POST /products/_update/1
+{
+  "script": "ctx._source.price +=5"
+  "upsert":{
+  	"price":100
+  }
+}
+
+What it will do is it will look for 'price' field in the document and if it exists then it will update it or as per the script,
+and if the document does not exist in the index then it will insert the 'price' as a new document.
+
+--------------------------------------------------------
+
+8: Deleting the document(s)
+
+
+-> Deleting the single document
+
+
+DELETE /{index_name}/_doc/{id}
+
+** Deleting multiple documents using query
+
+DELETE /{index_name}/_delete_by_query
+{
+  "query":{
+    "match":{
+      "_id":2
+    }
+  }
+}
+
+--------------------------------------------------------
+
+9: Deleting the index
+
+This is more effecient than deleting all the documents in index.
+
+DELETE /{index_name}/
+
+--------------------------------------------------------
+
+Very important and useful
+
+10:Using BULK api for batch processing
+
+It means doing many and different operations on single/multiple documents in just one request.
+
+Different operations means in a single request you can insert, update, delete many documents.
+
+Bulk api request typically consists of 3 parts:
+
+Request on endpoint  : POST /{index_name}/_bulk
+Operation to perform : {index:{field:value}}
+Document itself  	 : {data with fields:values}
+
+For example creating multiple documents in a single query:
+
+POST /products/_bulk
+{"index":{"_id":1}}
+{document}
+{"index":{"_id":2}}
+{document}
+{"index":{"_id":3}}
+{document}
+{"index":{"_id":4}}
+{document}
+{"index":{"_id":5}}
+{document}
+...
+
+
+For example to perform bulk operations in a single query:
+
+POST /products/_bulk
+{"update":{"_id":2}}
+{"doc":{field:value}}
+{"delete":{"_id":1}}
+
+Very useful to bulk importing data.
+
+----------------------------------------------------------------------------------
+
+11:To bulk importing
+
+curl -H "Content-Type: application/json" -XPOST "http://localhost:9200/{index_name}/_bulk?pretty" --data-binary "@{file_name}.json"
+
+---------------------------------------------------------------------------------
+
+12: To get cluster information
+
+GET /_cat/health?v
+
+GET /_cat/nodes?v
+
+GET /_cat/indices?v
+
+GET /_cat/allocation?v
+
+GET /_cat/shards?v
+
+---------------------------------------------------------------------------------

@@ -1,0 +1,84 @@
+What you will learn in the course:
+
+--how to write complex search queries
+--how to tune relevance scoring
+--synonymns
+--stemming
+--auto-completion
+--statistics with aggregations
+and lot more.
+
+
+What is elastic search?
+
+Elasticsearch is an open source analytics and full-text search engine.
+
+It is often used for enabling search functionality in applications.
+
+You can build complex search functionality with Elasticsearch, similar to what you see you see in google.
+
+This includes:
+[
+	auto-completion,
+	correcting typos,
+	highlighting matches, 
+	handling synonyms,
+	adjusting relevance,
+	etc.
+]
+
+Not only search, you can do analysis on your structured data.
+
+You many even use it as machine learning or data science tool to make insights or forcasts based on your data. 
+
+What you can do as whole with elastic search?
+
+full-text search engine
+analysis,
+prediction,
+anomaly detection,
+alot more.
+
+
+This course mainly focuses on searching.
+---------------------------------------
+
+Elastic search is written in Java on the top of Apache Lucene.
+
+It is easy to use, configurable and highly scalable.
+
+
+In elasticsearch, Data is stored as documents(JSON objects)(similar to Mongodb)
+
+We can query the documents using REST API.
+
+----------------------------------------
+
+
+Elastic Stack:
+
+Elasticsearch: (Our main focus)
+
+Kibana: Data visualization tool that queries data using API. (very data stored in elastic search.) It can be used as monitoring tool as well. (monitoring for real-time traffic, errors, kpi, etc.)
+
+
+Logstash: Traditionally, Process logs froms apps and send them to elastic search. But we can use this tool for many other use-cases.
+
+X-Pack:
+
+Beats:Data shippers
+
+-----------------------------------------
+
+
+
+
+
+
+
+
+
+ 
+
+
+

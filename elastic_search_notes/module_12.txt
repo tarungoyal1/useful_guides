@@ -1,0 +1,155 @@
+This is extremely useful module.
+
+This is all about controlling amount of data to be returned in result of search query.
+
+(Similar to Projections in MongoDB)
+
+
+-------------------------------------------------------------
+1: Filter the fields inside "_source" field.
+
+Fields to be returned are controlled using "_source" field.
+
+Usecases:
+
+a: When you only need IDs of documents in search results.
+
+GET /recipe/_search
+{
+	"_source":false
+	"query":{
+
+	}
+}
+
+b: When you need only specific fields.
+
+GET /recipe/_search
+{
+	"_source":["title", "url", "{field}.{nested_field}", "{field}.*"],
+	"query":{
+
+	}
+}
+
+{field}.* --> for all nested field.
+
+c: When you want all fields/nested_fields excluding only few.
+
+GET /recipe/_search
+{
+	"_source":{
+		"includes":"ingredients.*",
+		"excludes":"ingredients.name",
+	},
+	"query":{
+
+	}
+}
+
+--------------------------------------------------------------------------------------
+
+3: Specifying the size of resultset(hits)
+
+default is 10
+
+2 ways of doing this:
+
+a: specify size in request URI
+
+GET /recipe/_search?size=2
+{
+	"_source":false
+	"query":{
+
+	}
+}
+
+b: specify size in request body [preferred way]
+
+GET /recipe/_search
+{	
+	"size":2,
+	"_source":false,
+	"query":{
+
+	}
+}
+
+---------------------------------------------------------------
+
+3: Specifying the offset
+
+GET /recipe/_search
+{	
+	"size":2,
+	"from":2,
+	"_source":false,
+	"query":{
+
+	}
+}
+
+"from" is usually in the multiple of "size"
+
+------------------------------------------------------------------
+
+5: Pagination
+
+
+total_pages = ceil(total_hits)/page_size)
+from = (page_size * (page_number - 1))
+
+These are not hard-fast or standard formulaes. You can use whatever you want.
+
+Elasticsearch only needs, "size" and "from" to do it's job. So, just supply them correctly, using any formulae you may derive.
+
+
+Points to be aware of:
+
+Unlike relational/non-relational databases: Elasticsearch does not return cursors, every query is stateless.
+
+This happens because elasticsearch has to deal with latest data in index, always.
+
+--------------------------------------------------------------------------------
+
+6: Sorting the results on specific field(s)
+
+Use:
+
+"sort":[{field:"asc|desc"}, {field:"asc|desc"}, {}]
+
+E.g. usecase: when you want to show latest post first, and sort ascedingly on prep_time [or any other numeric field]
+
+GET /recipe/_search
+{	
+	"_source":["preparation_time_minutes", "created"],
+	"query":{
+
+	},
+	"sort":[{"preparation_time_minutes":"asc"}, {"created":"desc"}]
+}
+
+----------------------------------------------------------------------------------
+
+
+Very useful: Similar to aggregations
+
+7: Sorting by multi-value fields
+
+Eg. usecase, sort on average ratings.
+
+Field "ratings":[2,3,1,6,5]
+
+"sort":[
+	{
+		"ratings":{
+			"order":"desc",
+			"mode":"avg"
+		}
+	}
+]
+
+"modes" include: "sum", "max", "min", "avg"
+
+----------------------------------------------------------------

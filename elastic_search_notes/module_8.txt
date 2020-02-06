@@ -1,0 +1,178 @@
+Term level queries.
+
+Term level are not analysed.
+So, Ideal for exact matches such number, dates, ranges, etc.
+Not good for full-text searches, however you can do so but that's not a good idea.
+
+Simple eg.
+
+GET /products/_search
+{
+  "query":{
+    "term":{
+      "is_active":true
+    }
+  }
+}
+
+
+
+----------------------------------------------------------------------------
+
+Searching for array fields. Eg. (tags) use "terms" not "term" and "keyword" mapping on field
+
+GET /products/_search
+{
+  "query":{
+    "terms":{
+      "tags.keyword":["Soup", "Cake"]
+    }
+  }
+}
+
+It will look for documents where any of the value occurs. Either "Soup" or "Cake" or both.
+We are not concerned with any other value present. If these are then Hit.
+
+Similar to IN clause in SQL
+
+----------------------------------------------------------------------------
+
+Useful:
+
+Retriving documents based on id(s)
+
+Use 'ids' for the name of the query.
+
+GET /products/_search
+{
+  "query":{
+    "ids":{
+      "values":[1, 2, 3]
+    }
+  }
+}
+
+-----------------------------------------------------------------------------
+
+Matching documents with-in range values. Can be applied to numbers, dates, etc.
+
+Use 'range' for the name of the query.
+
+operators-> lt, gt, lte, gte
+
+E.g.
+
+Finding documents 2 < in_stock < 1
+
+GET /products/_search
+{
+	"query":{
+		"range":{
+			"in_stock":{
+				"gte":1,
+				"lte":2
+			}
+		}
+	}
+}
+
+you can use just one operator as well. for ex filtering all docs where in_stock>5
+
+----
+
+finding on dates.
+
+Eg. finding the doc created in 2010
+
+GET /products/_search
+{
+	"query":{
+		"range":{
+			"created":{
+				"gte":"01-01-2010",
+				"lte":"31-12-2010",
+				"format":"dd-MM-yyyy"
+			}
+		}
+	}
+}
+
+You can define format as well regardless how dates appear in actual format in document.
+Then you will have to supply the date in same format in the query.
+---------------------------------------------------------------------------------
+
+If you need date math for determining relative date from anchor date, go to documentation.
+
+For.eg.
+
+Anchor date --> we provided in search ("gte":"01-01-2010")
+
+Relative date --> subtract 1 year or 1 year and 1 month/day, and so on.
+
+("gte":"01-01-2010||-1y")
+("gte":"01-01-2010||-1y-1d")
+
+Then it will look for documents having anchor date and also the relative date.
+
+--------------------------------------------------------------------------------------
+
+
+Searching for non-null values.
+
+Means, the field should have atleast 1 non-null value.
+
+use "exist" clause.
+
+E.g.
+
+Finding documents in which "tags" field has atleast 1 non-null value.
+
+GET /products/_search
+{
+  "query":{
+    "exists":{
+      "field":"tags"
+    }
+  }
+}
+
+-----------------------------------------------------------------------------------
+
+Matching based on prefix
+
+See docs.
+
+-----------------------------------------------------------------------------------
+
+Matchin on wildcards.
+
+E.g. veg*ble
+
+* --> any character(s)
+? --> 1 character(any) or no character
+
+GET /products/_search
+{
+  "query":{
+    "wildcard":{
+      "tags":"veg*ble"
+    }
+  }
+}
+
+-----------------------------
+
+Searching on regex:
+
+GET /products/_search
+{
+  "query":{
+    "regexp":{
+      "tags":"veg[a-zA-Z]+ble"
+    }
+  }
+}
+
+
+
+

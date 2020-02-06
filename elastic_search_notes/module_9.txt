@@ -1,0 +1,129 @@
+Full-text queries
+
+
+GET /recipe/_search
+{
+  "query":{
+    "match":{
+      "title":"Recipes with pasta or spaghetti"
+    }
+  }
+}
+
+This searches for individual 'terms' not on entire sentense(phrase).
+
+Means order in which terms appear doesn't matter, in this case.
+But does, when you are searching for sentence.
+
+"recipes"||with||pasta||or||spaghetti
+
+Default operator is OR.
+
+Means match occurs if any of the term appears in title field of document.
+
+To make AND operator in searching.
+
+GET /recipe/_search
+{
+  "query":{
+    "match":{
+      "title":{
+      	"query": "Recipes with pasta or spaghetti",
+      	"operator": "and"
+      }
+    }
+  }
+}
+
+------------------------------------------------------------------------------------
+
+Searching for entire sentence.
+
+use 'match_phrase'
+
+GET /recipe/_search
+{
+  "query":{
+    "match_phrase":{
+      "title":"pasta spaghetti"
+    }
+  }
+}
+
+Now,the title field must have "pasta spaghetti" in same order and no other thing in between.
+
+"spaghetti pasta" NOT the same thing.
+"pasta xyz spaghetti" NOT the same thing.
+
+
+--------------------------------------------------------------------------------------
+
+MOST IMPORTANT:
+
+How to search for multiple fields in same query?
+
+use 'multi_match' as query type.
+
+We array of fields that we expect the term to appear in.
+
+GET /recipe/_search
+{
+  "query":{
+    "multi_match":{
+    	"query":"pasta",
+    	"fields":["title", "description"]
+    }
+  }
+}
+
+Important to read. (to decide and specify the relevance score of individual field)
+
+
+By default, elastic search will look for documents where "pasta" appears in either title or description field or both.
+
+
+But what if you need to tell different relevance score to documents for indivdual field(s).
+
+For e.g.
+
+You want to give 'title' field more weight than 'description' field, so if term(s) appear in 'title' field of document1 and appear in 'description' field of document2 not in 'title' field of it(document2). Then relevance score is higher for document1 as 'title' has more weight.
+
+You can achieve this by setting 'type' to the query. This is bit advanced.
+
+See documentation: for types of multi-match query
+
+https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html#multi-match-types
+
+
+For e.g. type as "best_fields" in query.
+
+The best_fields type is most useful when you are searching for multiple words best found in the same field.
+
+ For instance “brown fox” in a single field is more meaningful than “brown” in one field and “fox” in the other.
+
+GET /_search
+{
+  "query": {
+    "multi_match" : {
+      "query":      "brown fox",
+      "type":       "best_fields",
+      "fields":     [ "subject", "message" ],
+      "tie_breaker": 0.3
+    }
+  }
+}
+
+Normally the best_fields type uses the score of the single best matching field, but if tie_breaker is specified, then it calculates the score as follows:
+
+the score from the best matching field
+plus tie_breaker * _score for all other matching fields
+
+----------------------------------------------------------------------------------- 
+
+
+
+
+
+
+
+

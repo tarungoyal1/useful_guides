@@ -1,0 +1,20 @@
+Joining queries.
+
+Like NOSQL databases, elasticsearch stores data in de-normalized form.
+It contributes to wastage of space, due to redundancy.
+
+But storing data in de-normalized form enhance performance in searching.
+
+So, elasticsearch should be used only for search and analysis purposes.
+
+This is why, It's not recommended to use elasticsearch as primary data store for the application.
+
+Performance > Storage space
+
+Hence, unlike relational databases such as Mysql/Postgres, elasticsearch doesn't support joins.
+
+However, there are few ways to do simple joining data across documents.
+
+But these queries are ineffecient.
+
+------------------------------------------------------

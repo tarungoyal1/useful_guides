@@ -1,0 +1,99 @@
+GET /products/_doc/1
+
+POST /products/_doc/1
+{
+  "name":"Future of the Mind",
+  "author":{"firstname":"Michio", "lastname":"Kaku"},
+  "price":450,
+  "genres":["Science fiction", "psychology", "future"],
+  "status":"reading"
+}
+
+
+PUT /products/_doc/1
+{
+  "name" : "Book",
+    "instructor" : {
+      "firstname" : "Michio",
+      "lastname" : "Kaku "
+    }
+}
+
+POST /products/_update/1
+{
+  "doc":{
+    "name":"Future of the Mind",
+    "author":{"firstname":"Michio", "lastname":"Kaku"},
+    "price":450,
+    "genres":["Science fiction", "psychology", "future"],
+    "status":"reading"
+  }
+}
+
+POST /products/_doc/2
+{
+  "doc":{
+    "name":"Thinking fast and slow",
+    "author":{"firstname":"Daniel", "lastname":"Kanheman"},
+    "price":450,
+    "genres":["psychology", "decision-making", "loss-aversion"],
+    "status":"read"
+  }
+}
+
+POST /products/_update/1
+{
+  "script": "ctx._source.price +=5"
+}
+
+GET /products/_search
+{
+    "query": {
+        "match_all": {}
+    }
+}
+
+
+DELETE /products/_doc/2
+
+
+POST /products/_delete_by_query
+{
+  "query": {
+    "match": {
+      "_source.doc.status":"read"
+    }
+  }
+}
+
+
+POST /products/_bulk
+{"update":{"_id":2}}
+{"doc":{"status":"reading"}}
+{"delete":{"_id":1}}
+
+
+
+GET /_cat/health?v
+
+GET /_cat/nodes?v
+
+GET /_cat/indices?v
+
+GET /_cat/allocation?v
+
+GET /_cat/shards?v
+
+
+
+GET /products/_mapping
+
+
+PUT /products/_mapping
+{
+  "properties":{
+    "discount":{
+      "type":"double"
+    }
+  }
+}

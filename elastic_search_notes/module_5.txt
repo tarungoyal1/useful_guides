@@ -1,0 +1,422 @@
+Mappings
+
+In elasticsearch, Mappings are used to define how documents and their fields should be stored and indexed.
+
+Examples mappings can be used for, could be to define which fields should be treated as full-text fields, which fields contain numbers, dates, or geographical locations.
+ 
+You can specify date formats for date fields, and also specify analyzers for full-text fields.
+
+You can kind of think mappings in elasticsearch as equivalent of defining schema in relational databases.
+
+For most of the use cases, you don't need to deal with mappings but if you need greater control than you should know how mappings work.
+
+----------------------------------------------------------------------------
+
+2: Dynamic Mapping
+
+Mappings can be defined explictly if you want to.
+
+Dynamic mapping means that no mappings is defined explicitly, or atleast for some fields.
+
+When adding new documents, Elasticsearch will automatically add  mappings by inspecting the type of values for a document's field.
+
+For e.g. if you add a new field name 'created':"03/02/2020 18:02" then elasticsearch detects that this field contains the value of date type hence it maps this field ('created') with 'date' data type along with format as well (DD/MM/YY HH:MM).
+
+another field -> in_stock:2 then map with 'long'
+another field -> description:"lorem ipsum" then map with 'text' and allow full-text searches over this field.
+
+another field -> is_staff:true then map with 'boolean' field.
+
+
+To check mappings on a index:
+
+GET /{index_name}/_mapping
+
+------------------------------------------
+
+3: Meta fields
+
+Every document that is stored with in an elasticsearch cluster, has some meta data associated with it apart from the data fields that we specify when creating/indexing the document.
+
+These fields are called Meta fields.
+
+There are many of them such as _index, _source, etc.
+
+_index   		: contains the name of the index to which the document belongs.
+_id     		: stores the id of the document also used to lookup the document.
+_source 		: contains the original JSON object used when indexing.
+_version		: stores interval version of the document.
+_field_names	: contains the names of every field that contains a non-null value.
+_routing		: stores the value used to route a document to a shard.
+_meta			: maybe used to store custom data that is left untouched by Elasticsearch.
+
+-------------------------------------------------------------------------------
+
+4: Field data types
+
+Divided into 4 categories.
+
+1. Core data types           : Primitive data types such as strings, integers, dates, etc.
+	
+	1.a Text data type (text)
+
+			Used to index full-text value such as descriptions.
+			Values are analyzed.
+			Eg. description:"Lorem ipsum Lorem ipsum Lorem ipsum Lorem ipsum"
+
+	1.b Keyword data type (keyword)
+
+			Used for structured data (tags, categories, email, status, etc)
+			Not analyzed.
+			Typically used for filtering and aggregations.
+
+			IMP: For filtering documents on a field use, (keyword) dt not (text) dt
+
+
+	1.c Numeric data types: Basic numeric data types
+		These include:
+		(float), (long), (short), (en), (double), (half_float), 
+		(byte) : used for numeric values b/w -128 to 127
+		(scaled_float) : float point stored as long 														(multiplied by scaling factor then rounded off)
+
+	1.d Date data type (date)
+		Represents dates as either a string, long, or integer.
+		Date format may be configured .
+		Eg. "2007-01-01" | "2007-02-01T11:20:00" | 11966726 (epoch timestamp)
+		Internally date is stored as long, milliseconds from epoch.
+
+	1.5 Boolean Data type (boolean)
+		Stores boolean values. true/false
+
+	1.6 Range data type
+		Used for range values such as date ranges or numeric ranges such as (10-20)
+
+		(integer_range), (float_range), (long_range), (double_range), (date_range)
+
+		E.g. {"gte":10, "lte":20}
+
+	1.7 Binary data type (binary)
+		Accepts base64 encoded binary value.
+		Not stored by default.
+
+2. Complex data types    : Not primitive but are more complex in nature e.g. arrays, objects.
+
+	2.a Object data type: 
+			Added as Json objects;
+			Stored as key-value pairs internally;
+			May contain nested objects.
+
+	2.b Array "Data type"
+
+			Not an actual data type, because each field may contain multiple values by default;
+			This is only stored as value of field not the actual data type of field;
+			When dynamic mapping is done, type of first value in array is used to determine the data type of actual field.
+
+
+
+			E.g. 
+			"nums": [1, 2, 3] // field "nums" will have data type of integer as 1 is integer
+			["one", "two", "three"] // field "nums" will have data type of "text"/"keyword" as 1 is "text"/"keyword". Check
+
+
+
+	2.c  Nested Data type (nested
+			Specialized version of the 'object' data type;
+			Enables arrays of objects to be querified independently of each other;
+
+3. Geo data types:
+	
+	3.a Geo-point Data Type (geo_point )
+		Accepts latitude-longitud pairs;
+		Used for various geographical operation;
+
+	3.b Geo-shape Data Type (geo_shape)
+
+		Used for more geographical shapes such polygons, circles, etc;
+
+		(point), (polygon), (linestring), (multipoint), (multilinestring), (multipolygon), (geometrycollection), (envelope), (circle)
+
+4. Specialized data types  : Data types with a very specific purposes, e.g. storing IP addresses, addresses, attachments, etc.
+
+
+		4.a IP Data type (ip)
+				Used for storing IPv4 and IPv6 addresses.
+				e.g. "192.168.1.1"
+
+		
+   IMP->4.b : Completion Data type (completion)
+   			Used to provide auto-completion and search suggestions;  ("search-as-you-type") functionality;
+   			This is done by 'suggesters'; 
+   			Optimized for quick lookpus;
+
+   		4.c: Attachment Data type (attachment)
+   				Requires the "Ingest Attachment Processor Plugin";
+
+   				To install the plugin:
+   				sudo bin/elasticsearch-plugin install ingest-attachment
+
+   				Used to make text from various document formats searchable (e.g. PPT, PDF, RTF..etc);
+
+   				Uses Apache Tika internally for text recognition.
+
+
+-------------------------------------------------------------------------------
+
+5: Adding mappings for a field to existing indices.
+
+PUT /{index_name}/_mapping
+{
+  "properties":{
+    "{field_name}":{
+      "type":"{data_type}"
+    }
+  }
+}
+
+For e.g:
+
+PUT /products/_mapping
+{
+  "properties":{
+    "discount":{
+      "type":"double"
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+
+6: Updating existing mappings
+
+We can't update existing mappings because if we do so, it would invalidate the existing data.
+
+What is the solution?
+
+Delete the index -> Create the index explicitly with mappings -> Re-ingest data
+
+
+
+PUT /{index_field}
+{
+	"mappings":{
+		"default":{
+			"dynamic":false,
+			"properties":{
+				"{field_name}":{
+					type:"{data_type}"
+				},
+				"{field_name}":{
+					type:"{data_type}"
+				},
+				"{field_name}":{
+					type:"{data_type}"
+				}
+
+			}
+		}
+	}
+}
+
+-------------------------------------------------------------------------
+
+7: Mapping parameters
+
+	7.a (coerce)
+
+		Elasticsearch automatically cleans up the values in the document when indexing.
+		E.g: 
+			"5" 	-> 5
+			"5.0" 	-> 5
+			5.0 	-> 5
+
+		You can disable(coerce) this automatically cleaning by setting (coerce) keyword to false.
+		After doing that, elasticsearch will reject documents that don't contain valid data type for the field and not try to coerce the value into correct data type.
+
+	USEFUL:
+	7.b (copy_to)
+		Enables you to create custom fields. Copies field values into a given field.
+		Copies values, not terms.
+
+		For e.g:
+
+			"first_name":{
+				"type":"text",
+				"copy_to":"full_name",
+			},
+			"second_name":{
+				"type":"text",
+				"copy_to":"full_name",
+			},
+			"full_name":{
+				"type":"text"
+			}
+
+			Note: copied values will not show up with in the "_source" field.
+
+	7.c (dynamic)
+		Enables or disables adding fields to documents or inner objects dynamically.
+		Applied to both top-level fields and new field for inner objects.
+
+		"dynamic":false means you can't insert any other new field dynamically.
+		It can be combined with global field and inner field, separately.
+		Here, dynamic is false for "default" field but true for its inner field "name".
+		(dynamic) can contain true/false/strict values.
+
+		E.g: {
+				"mappings":{
+					"default":{
+						"dynamic":false,
+						"properties":{
+								"name":{
+									"dynamic":false,
+									"properties":{
+
+									}
+
+								}
+						}
+					}
+				}
+			}
+
+	7.d (properties)
+		Contains field mappings, either at the top level of documents, or within inner objects.
+
+	IMP:
+	7.e (norms)
+		Whether or not to disable storing norms (used for relevance scores during matching)
+		Elasticsearch stores some information (normalization factors for fields) that it uses to calculate the score during the matching of documents based on search queries.
+
+		These factors are referred to as norms.
+
+		By setting "norms":false on a field then elasticsearch will not store the  information (normalization factors on this field).
+		It will save disk space.
+		Good when the field is only used for filtering or aggregation purposes not for full-text search.
+
+		E.g.
+		{
+			"properties":{
+				"full_name":{
+					"type":"text",
+					"norms":false
+				}
+			}
+		}
+
+	7.f (format)
+		Defines the format for "date" fields.
+
+		"yyyy-MM-dd", "epoch_millis", "epoch_second",..
+
+					Default:
+
+		"strict_date_optional_time||epoch_millis"
+
+	7.f (null_value)
+		Replace NULL values with the specified value.
+		Means, if for the field, a NULL value is supplied then it will be given the specified value on field (specified using 'null_value' parameter)
+
+		E.g.
+		{
+			"properties":{
+				"discount":{
+					"type":"integer",
+					"null_value":0
+				}
+			}
+		}
+
+	7.g (fields)
+			Used for indexing the field in different ways.
+
+
+-------------------------------------------------------------------------
+
+8: Adding multi-field mappings
+
+PUT /{index_name}/_mapping
+{
+	"properties":{
+		"description":{
+			"type":"text"
+		},
+		"name":{
+			"type":"text",
+			"fields":{
+				"keyword":{
+					"type":"keyword"
+				}
+			}
+		},
+		"tags":{
+			"type":"text",
+			"fields":{
+				"keyword":{
+					"type":"keyword"
+				}
+			}
+		}
+	}
+}
+
+
+Although, "tags" field will contain array of string but you just need to set "type":"text"
+
+-----------------------------------------------------------------------------------
+
+9: Adding multi-field mappings
+
+PUT /products/_mapping
+{
+	"properties":{
+		"created":{
+			"type":"date",
+			"format":"strict_date_optional_time||epoch_millis"
+		}
+	}
+}
+
+Or you can use "format":"yyyy/MM/dd HH:mm:ss||yyyy/MM/dd" or anyway you like.
+
+-----------------------------------------------------------------------------------
+
+10: Picking up new fields without dynamic mapping
+
+For a field where there is no dynamic mapping associated, means you have explicitly set the mapping for the field, then Elasticsearch ignores the field for search query.
+
+POST /products/{id}
+{
+	"description":"This product is a book"
+	"discount":20
+}
+
+Since, both the field are having dynamic mapping, then they both are indexed and searchable using a search query.
+
+But now suppose, you define a new mapping explicitly to a field let say to "discount"
+
+
+PUT /products/_mapping
+{
+	"properties":{
+		"discount":{
+			"type":"integer"
+		}
+	}
+}
+
+
+Now, the "discount" field will not be searchable, this field has no dynamic mapping.
+It will be ignored by elasticsearch when indexing but it will still be available in _source field but it will not be searchable on any search query.
+
+Then, you how to make it searchable means making a field having no dynamic mapping searchable.
+
+
+
+POST /{index_name}/_update_by_query?conflicts=proceed
+
+
+
+
+
+
+

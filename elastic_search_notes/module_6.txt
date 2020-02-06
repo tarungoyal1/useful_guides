@@ -1,0 +1,420 @@
+Analysis process and Analyzers
+
+1:
+
+fields having type:"text" are analyzed.
+
+What does it mean by saying analyzed?
+
+When a new document is indexed, its 'full-text' fields and not 'keyword' fields go through a analyses process.
+
+
+New document  -----> Analysis (on 'full-text' fields)  -----> Store document
+
+Analysis process:
+
+	Basically, it involves: Tokenizing full-text into terms and the terms are converted into lower case letters (normalizing).
+	So more generally, it is tokenizing and normalizing a block a text.
+	Actually, analysed terms are stored in something called 'inverted index'.
+	So, when a search query is performed, it is run against the result of analysed text and not on the documents as they were indexed.
+
+	This is done to make text easier to search. 
+
+	You have full control over analysis process and which analyzer is used.
+
+	The standard analyzer does what described in analysis process, above.
+
+
+-----------------------------------------------------------------------------------------
+
+2: How does a analyzer work?  A closer look
+
+
+An analyzer consists of three things:
+
+Character filters
+Tokenizer
+Token filters
+
+--Building blocks of an analyzer-
+
+So an analyzer is basically a package of these building blocks and each one of the changes the input stream.
+ 
+
+
+Input stream goes through the following flow:
+
+Input stream  --> Character filters --> Tokenizer --> Token filters
+
+2.1 --> Character filter
+
+Character filter: It receives the original text of 'text-field' and transform the value 	by adding, removing or changing the characters.
+
+
+It's job is to give pure words of language.
+
+For e.g. stripping the html tags.
+
+<strong>Two</strong> words! --> Character filter --> Two words!
+
+Note: An analyser can have 0 or more character filter.
+
+2.2 --> Tokenizer
+
+Tokenizer: It splits the input text (pure words) into individual tokens.
+
+Usually the tokens are individual words.
+
+So, if we have a sentense with 10 words, we get an array of 10 tokens.
+
+Basically, it splits the words by white-space ad also removes most symbols such as commas periods semi-colons, etc.
+
+For e.g:
+
+Two words! --> Tokenizer --> [Two, words]
+
+
+Note: 
+An analyser can may have 1 tokenizer.;
+By default, a tokenizer name standard is used which uses a Unicode text segmentation algo;
+
+Apart from splitting, tokenizer is also responsible for recording the position of the tokens including the start and end character offsets for the words that the token represent.
+
+This makes it possible to map the tokens to the original words, it is used to provide highlighting of matching words.
+
+2.3 --> Token filters
+
+Token filters can add, remove, change tokens.
+
+It works on token streams rather than character stream which a character filter works on.
+
+There are couple of different token filters.
+few simple examples would be: 
+
+Lowercase token filter.(for making all characters into lowercase)
+Namestop token filter. (to remove stop words)
+
+Useful:
+Named synonym token filter. (for giving similar words with same meaning), it gives the documents on words that have same meaning. for.eg. you are searching with the keyword as 'good' but in document 'nice' is present, then search will give you the document.
+
+
+---------------------------------------------------------------------------------------
+2: Using the analyze API.
+
+Very Useful when you're fetching data from internet and clean it before saving it in an database or in elasticsearch index.
+
+
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "I'm in the mood for drinking semi-dry red wine!. <b>What about you?</b>"
+}
+
+POST _analyze
+{
+  "filter": ["lowercase"],
+  "text": "I'm in the mood for drinking semi-dry red wine!. <b>What about you?</b>"
+}
+
+POST _analyze
+{
+  "tokenizer": ["lowercase"],
+  "text": "I'm in the mood for drinking semi-dry red wine!. <b>What about you?</b>"
+}
+
+To add a character filter:
+
+"char_filter":["html_strip"]
+
+-----------------------------------------------------------------------------
+
+4: Inverted index
+
+The purpose of inverted index is store text in a structure that allows for very effecient and fast full-text searches.
+
+When performing full text searches, we're actually querying an inverted index not the json document we inserted.
+
+A cluster will have atleast one inverted index.
+
+There would be an inverted index for each full-text fields per index.
+
+Means, if you have an index containing documents containing 5 full-text fields then you will have 5 inverted-indices.
+
+An inverted index contains all of the unique terms appear in a document in index.
+
+For each term(word), there is a list of documents that the term appears in.
+
+And when searching for that term, the list of documents is shown based on relevance.
+
+----------------
+So in essence, an inverted index is a mapping between terms and which documents contain those terms.
+----------------
+
+Text from every full-text fields of all documents in index ---> analysis process gives terms ---> then all those terms are stored in an inverted index along with mappings which shows which term appears in which document.
+
+Term  		Doc1 	Doc2 	Doc3...
+__________________________________
+
+best		X		X		X
+carbon				X
+pasta		X				X
+company		X		X		X
+recipe		X				X
+
+
+And the documents are returned on search terms based on relevance.
+
+Inverted index also stores the information that is used on computing the relevance score.
+
+for eg, number of cocuments containig the term, how many times terms appears, average length of field, etc.
+
+------------------------------------------------------------------------------------------
+
+
+5: Built-in Character filters
+	
+	3 character filters are present.
+
+	5.1 Html strip character filter (html_strip)
+		Strips out HTML elements like <strong> and decodes HTML entities such as &amp.
+
+	5.2 Mapping character filter (mapping)
+
+		Replaces values based on a map of keys and values.
+		E.g. I broke_my _leg, but i am still walkable.
+
+			_ mapped to * (or anything)
+
+			I broke*my*leg, but i am still walkable.
+
+	5.3 Pattern replace (pattern_replace)
+		Uses a regular expression to match characters and replaces them with the specified replacement. Capture groups may be used.
+
+------------------------------------------------------------------------------------------
+
+6: Tokenizers are grouped in 3 main categories:
+
+	1.Word oriented tokenizer
+	2.Partial word tokenizer
+	3.Structured text tokenizer
+
+	Goto: 
+	https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenizers.html
+
+	Read complete documentation.
+
+----------------------------------------------------------------------------------------
+
+7. Token filters
+
+	There are quite few of them, i m listing down only the important ones.
+
+	(lowercase)
+	(uppercase)
+	(stop)	-> for removing stop words.
+	(stemmer) -> Stemming the words ('drinking' -> 'drink')
+	(synonym) : Adds/replaces tokens based on synonym config file. (happy  = delighted) 
+	(word_delimiter)
+
+
+	Documentation url:
+	https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenfilters.html
+
+----------------------------------------------------------------------------------------
+
+
+8: Analyzers
+
+	Analyzer is an orchestration of the (character filter, tokenizer and token filter) 
+
+	Documentation url:
+
+	https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html
+
+	8.1 Standard Analyser (standard)
+
+		The standard analyzer divides text into terms on word boundaries, as defined by the Unicode Text Segmentation algorithm. It removes most punctuation, lowercases terms, and supports removing stop words;
+
+		Suffecient for most of the use cases;
+
+	8.2 Simple Analyzer (simple)
+		Text into terms and splits words where character is not a letter.
+
+	8.3 Stop Analyzer (stop) [simple analyzer + removes stop words]
+
+	8.4 Whitespace Analyzer (whitespace)
+
+	8.5 Language analyzer (english, ..) [also stems the words]
+
+	IMP:
+	8.6 Pattern Analyzer (pattern)
+
+		The pattern analyzer uses a regular expression to split the text into terms. It supports lower-casing and stop words. 
+
+		"I, like, red, wine!" --> [I, like, red, wine]
+
+		(splited based on comma)
+-----------------------------------------------------------------------------------------
+
+
+IMPORTANT
+
+9: Configuring the built-in analyzer
+
+	Let's configure the 'standard' analyzer to remove stop words and also stem the word by defining our token-filter ("my_stemmer")
+
+	For that, we create a new index and configure the 'standard' analyzer used at creation time of index and 
+
+PUT /{new_index_name}
+{
+  "settings":{
+    "analysis": {
+      "analyzer":{
+        "english_stop":{
+          "type":"standard",
+          "stopword":"_english_"
+        }
+      },
+      "filter":{
+        "my_stemmer":{
+          "type":"stemmer",
+          "name":"english"
+        }
+      }
+    }
+  }
+}
+
+{english_stop} is now a new analyzer that can be used via _analyze api
+{my_stemmer} is now a new token-filter that can be used via _analyze api
+
+"filter" is for token-filter, If you want to add/configure a character filter use "char_filter"
+
+How to use it with _analyze API:
+
+POST /existing_analyzer_config/_analyze
+{
+  "analyzer": "english_stop",
+  "text":"I'm in the mood of drinking a semi-dry red Wine!"
+}
+
+or you can use this way:
+
+POST /existing_analyzer_config/_analyze
+{
+  "tokenizer": "standard",
+  "filter":["my_stemmer", "lowercase"],
+  "text":"I'm in the mood of drinking a semi-dry red Wine!"
+}
+
+---------------------------------------------------------------------------
+
+IMPORTANT
+
+10: Build a custom analyzer
+
+PUT /index_with_custom_analyzer
+{
+  "settings":{
+    "analysis": {
+      "analyzer":{
+        "my_custom_analyzer":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "char_filter":["html_strip"],
+          "filter":["lowercase", "trim"]
+        }
+      }
+    }
+  }
+}
+
+
+
+11: How to use the custom analyzer with our own field mappings?
+
+
+Build a custom analyzer/Configure an built-in one  ---> Make our field mapping on same index --> Insert a new document in the same index/Use _analyze API to analyze text
+
+PUT /my_products/_mapping
+{
+  "properties":{
+    "title":{
+      "type":"text",
+      "analyzer":"my_custom_analyzer"
+    },
+    "description":{
+      "type":"text",
+      "analyzer":"my_custom_analyzer"
+    },
+    "price":{
+      "type":"integer"
+    }
+  }
+}
+
+-------------------------------------------------------------------------
+
+12: Adding analyzers to existing index means that already have been configured or created without any configuration.
+
+1-->First you will need to close the index:
+
+POST /{index_name}/_close
+
+
+2--> 
+PUT /{index_name}/_settings
+{
+  "analysis":{
+    "{name_of_analyzer_used}":{
+      "{new_filter|tokenizer|char_filter}":"{value}"
+    }
+  }
+}
+
+
+
+3-->Reopen the closed index
+
+POST /{index_name}/_open
+
+-------------------------------------------------------------------------------------------
+
+14: A word on stop words.
+
+It's not a best practice to remove the stop words?
+
+It used to be because we needed to remove stop words as they really didn't affect relevance score much.
+
+As elasticsearch has evolved, so has it's relevance algorithm. Elastic search now uses an algorithm that's better in handling stop words.
+
+In summary, you should only remove stop words when you really need to as per the use case.
+Othewise, it's quite redundant.
+
+----------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+

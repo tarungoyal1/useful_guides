@@ -1,0 +1,144 @@
+********** Adding boolean logic to queries ********
+
+1: Performing a bool query
+
+Bool query can be performed in both contexts: Query context and Filter context
+
+For query context -> match + relevance score
+For filter context -> match
+
+
+
+GET /recipe/_search
+{
+	"query":{
+		"bool":{
+			"must":[
+				{
+					"match":{
+						"ingredients.name":"parmesan"
+					}
+				},
+
+				{	
+					"range":{
+					  "preparation_time_minutes": {
+					    "lte": 15
+					  }
+					}
+				}
+			]
+		}
+	}
+}
+
+Note: queries in "must" array must match and the relevance score is calculated for individual query in "must" array.
+
+If you don't want to affect relevance score for any query, put that in "filter" object instead of "must" object.
+
+for above e.g., calculating the relevance score for [range] query is pointless, so this query should be executed within "filter" object.
+
+
+GET /recipe/_search
+{
+	"query":{
+		"bool":{
+			"must":[
+				{
+					"match":{
+						"ingredients.name":"parmesan"
+					}
+				}
+			],
+
+			"filter":[
+				{	
+					"range":{
+					  "preparation_time_minutes": {
+					    "lte": 15
+					  }
+					}
+				}
+			]
+		}
+	}
+}
+
+now, preparation_time_minutes field didn't boost any relevance score.
+
+
+Opposite of "must" is "must_not". Used for Excluding something on some field. 
+[Scoring for "must_not" is IGNORED as it is executed in filter context.]
+
+GET /recipe/_search
+{
+	"query":{
+		"bool":{
+			"must":[
+				{
+					"match":{
+						"ingredients.name":"parmesan"
+					}
+				}
+			],
+
+			"must_not":[
+				{
+					"match":{
+						"ingredients.name":"tuna"
+					}
+				}
+			],
+
+			"filter":[
+				{	
+					"range":{
+					  "preparation_time_minutes": {
+					    "lte": 15
+					  }
+					}
+				}
+			]
+		}
+	}
+}
+
+IMPORTANT:
+
+"should" object is special.
+
+"should" is used to boost the score if the query matches inside it. But not REQUIRED to match.
+
+If matches then give preference (boost the score) but not required to match, unlike "must".
+
+Only purpose of "should" is to influence the score.
+
+GET /recipe/_search
+{
+	"query":{
+		"bool":{
+			"must":[
+				{
+					"match":{
+						"ingredients.name":"parmesan"
+					}
+				}
+			],
+
+			"should":[
+				{
+					"match":{
+						"ingredients.name":"tuna"
+					}
+				}
+			]
+		}
+	}
+}
+
+Here, match against "parmesan" but boost the score of those recipes if they have "tuna" as well. But it is not required for them to have "tuna" in first place.
+
+------------------------------------------------------------------------------
+
+
+"match" query constructs a bool query and operator used is OR by default, unless you change it to something else.
