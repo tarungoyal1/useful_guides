@@ -1,0 +1,27 @@
+ 
+$ssh-keygen
+
+Enter filename: digitalocean(let's say)
+Enter paraphrase
+
+Two files will be generated:
+
+digitalocean --> Private key
+digitalocean.pub --> Public Key
+
+ssh -i digitalocean root@198.199.64.71
+
+Enter paraphrase you entered while making the key.
+
+------------------------------
+
+To use scp with key:
+
+Note- Run the following cmd on SOURCE(sender) machine, usually local one and Destination is the remote server
+
+scp -i ~/<private-key> -r <file_path/folder_path> <user>@<IP>:<Destination_Folder_Path>
+
+
+----------------------------
+
+nohup scrapy crawl get_book_details &

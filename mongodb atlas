@@ -1,0 +1,7 @@
+user = omen
+pass = 9gaezLYXBsEwBKjC
+
+mongoimport --host atlas-ymuzz7-shard-0/bookstore-shard-00-00.tsksz.gcp.mongodb.net:27017,bookstore-shard-00-01.tsksz.gcp.mongodb.net:27017,bookstore-shard-00-02.tsksz.gcp.mongodb.net:27017 --ssl --username omen --password 9gaezLYXBsEwBKjC --authenticationDatabase admin --db books --collection book_info --type json --file book_data.json
+
+
+mongoexport --host atlas-ymuzz7-shard-0/bookstore-shard-00-00.tsksz.gcp.mongodb.net:27017,bookstore-shard-00-01.tsksz.gcp.mongodb.net:27017,bookstore-shard-00-02.tsksz.gcp.mongodb.net:27017 --ssl --username omen --password 9gaezLYXBsEwBKjC  --authenticationDatabase admin --db books --collection book_info --type json --out nonfiction_book_info
